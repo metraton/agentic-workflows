@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Más allá de la delegación: Orquestando Sistemas Agénticos Controlados</title>
+  <title>Beyond Delegation: Orchestrating Controlled Agentic Systems</title>
   <style>
     :root {
       /* Day Mode - Sepia/Warm theme */
@@ -103,6 +103,44 @@
 
     .theme-toggle:hover {
       background: var(--surface);
+    }
+
+    .lang-toggle {
+      position: fixed;
+      top: 20px;
+      right: 140px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .lang-toggle:hover {
+      background: var(--surface);
+    }
+
+    @media (max-width: 480px) {
+      .lang-toggle {
+        top: 15px;
+        right: 120px;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      .theme-toggle {
+        top: 15px;
+        right: 15px;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
     }
 
     .container {
@@ -313,18 +351,23 @@
     }
   </style>
 </head>
-<body data-theme="day">
+<body data-theme="day" data-lang="es">
   <button class="theme-toggle" id="theme-btn">
     <span class="theme-icon">☀️</span>
-    <span class="theme-text">Modo Noche</span>
+    <span class="theme-text">Modo Día</span>
+  </button>
+
+  <button class="lang-toggle" id="lang-btn">
+    <span class="lang-icon">🌐</span>
+    <span class="lang-text">EN</span>
   </button>
 
   <div class="container">
     <div class="card">
       <header>
-        <h3>jaguilar@ai-context-ops ~/gaia-ops % : cat /agents/workflow.md</h3>
+        <h3 id="page-title" data-text-en="jaguilar@ai-context-ops ~/gaia-ops % : cat /agents/workflow.md" data-text-es="jaguilar@ai-context-ops ~/gaia-ops % : cat /agents/workflow.md">jaguilar@ai-context-ops ~/gaia-ops % : cat /agents/workflow.md</h3>
       </header>
-      <article>
+      <article lang="es" data-lang-section="es">
         <h1>Más allá de la delegación: Orquestando Sistemas Agénticos Controlados</h1>
         <p class="subtitle">Cómo pasé de delegar la ejecución de comandos con IA a diseñar un sistema agéntico completo con orquestación, contexto y seguridad en capas.</p>
 
@@ -495,14 +538,18 @@ User Query
               <h2>Capítulo 4: Seguridad en Capas</h2>
               <h3>Settings y permissions: security tiers y hooks</h3>
               <div class="blockquote">La automatización rara vez se detiene por falta de capacidad; casi siempre se detiene donde se acaba nuestra confianza.</div>
-              <p>El problema no era la automatización en sí. Era que estaba creando fricción innecesaria donde no la necesitaba. Un workflow predecible requiere dos pilares simultáneos: <strong>Agilidad</strong>, donde el riesgo es nulo (queries, validaciones), y <strong>Control</strong>, donde el riesgo es irreversible (deployments, deletions).</p>
+              <p>El problema no era la automatización en sí. Era que estaba creando fricción innecesaria donde no la necesitaba. Un workflow predecible requiere dos pilares simultáneos:</p>
+              <p><strong>Agilidad</strong>, donde el riesgo es nulo (queries, validaciones).</p> 
+              <p><strong>Control</strong>, donde el riesgo es irreversible (deployments, deletions).</p>
               <p>Sin esta discriminación, terminas con ruido o peligro. <strong>¿Solución?</strong></p>
 
               <h3>1. Security Tiers (T0–T3)</h3>
               <p>Clasifiqué todas las operaciones en cuatro niveles de riesgo: <strong>T0</strong> lecturas, <strong>T1</strong> validaciones, <strong>T2</strong> cambios locales/dry‑run y <strong>T3</strong> operaciones que escriben en entornos reales y requieren Approval Gate.</p>
 
               <h3>2. Hooks: los guardianes del sistema</h3>
-              <p><strong>pre_tool_use.py</strong> decide si un comando es seguro antes de ejecutarlo, <strong>post_tool_use.py</strong> registra qué pasó después y <strong>subagent_stop.py</strong> cierra cada sesión con un reporte completo.</p>
+              <p><strong>pre_tool_use.py:</strong> Intercepta todos los comandos ante de ejcutarse y decide si es seguro antes de ejecutarlo.</p> 
+              <p><strong>post_tool_use.py:</strong> Registra qué pasó después de ejecutar el comando.</p>
+              <p><strong>subagent_stop.py:</strong> Cada vez que un agente cierra una sesión, genera un reporte completo.</p>
 
               <h3>3. Settings: Allow, Ask, Deny</h3>
               <p>Con los tiers y los hooks en su lugar, el orquestador por fin estaba blindado: cualquier comando pasaba por un filtro antes de tocar un entorno real. Era momento de que los agentes dejaran de solo ejecutar comandos por mí; era momento de delegarles tareas completas. Para eso tuve que ir a la raíz: editar el archivo <code>.claude/settings.json</code>.</p>
@@ -547,7 +594,8 @@ subagent_stop.py  (reporte de sesión)
 
         <!-- Síntesis -->
         <section class="chapter" id="cap-6">
-          <h2>Capítulo 5–6: Reflexiones, Síntesis y el Camino Adelante</h2>
+          <h2>Capítulo 5: Reflexiones, Síntesis y el Camino Adelante</h2>
+          <h3>Qué Funciona, Qué No, y Por Qué Importa</h3>
           <p>Las herramientas están. Los guardrails están. El sistema funciona. Pero construirlo me enseñó más sobre sistemas que sobre comandos individuales.</p>
 
           <p>Si algo he aprendido en toda esta locura es que esta nueva tecnología no va de escribir más software, sino de <strong>diseñar comportamientos</strong>: sistemas que tomen decisiones con contexto, con guardrails y con un humano que entiende por qué confía en ellos. Cada iteración me hizo preguntarme menos “qué código escribir” y más “qué decisiones quiero que tome el sistema, con qué contexto y bajo qué límites”.</p>
@@ -569,11 +617,263 @@ subagent_stop.py  (reporte de sesión)
             <li><strong>Hacer visible la gestión de tareas:</strong> explorar si la mejor opción es integrar JIRA/Linear u optar por un sistema propio que hable el mismo idioma que los agentes.</li>
           </ul>
 
-          <p>Lo técnico seguirá cambiando: modelos, APIs, herramientas. Lo que quiero que se mantenga es la idea central de este artículo: más allá de delegar comandos, nuestro trabajo es diseñar sistemas agénticos que tomen decisiones con contexto, con guardrails y con un humano que entiende por qué confía en ellos.</p>
+        </section>
+      </article>
+      <article lang="en" data-lang-section="en" hidden>
+        <h1>Beyond Delegation: Orchestrating Controlled Agentic Systems</h1>
+        <p class="subtitle">How I moved from delegating command execution with AI to designing a complete agentic system with orchestration, context, and layered security.</p>
+
+        <p><strong>Author:</strong> Jorge Aguilar · <strong>Date:</strong> November 2025 · <strong>Connection:</strong> Continuation of "Context Design &amp; Agentic Deployment"</p>
+
+        <hr />
+
+        <p>In my previous article, I shared how Spec-Kit—a structured planning framework—along with 5 specialized agents, successfully deployed four applications from scratch in an agentic aproach. Containerized applications, verified IaC infrastructure, and GitOps deployments. The system delivered.</p>
+
+        <p>But I was there the whole time: monitoring every step, intervening when the agent deviated, confirming every operation. I was using AI, yes, but I was still the manual operator. More than an autonomous system, it was like building a robot that still needed hand-holding.</p>
+
+        <p>That's where the dilemma appeared. On one hand, I was generating real value: deployed applications, fulfilled deliveries. On the other, each session revealed something new about agent architecture, <em>context engineering</em>, and intelligent orchestration. Was I really automating or just delegating commands? Between deep research, audits, and that recursive loop to continuously improve the system, it was hard to measure. I intuited, however, that the next step wasn't "more agents," but <strong>more orchestration and more control</strong>. That's what this article is about.</p>
+
+        <hr />
+
+        <!-- Chapter 1 -->
+        <section class="chapter" id="cap-1">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Chapter 1: Architecture</h2>
+              <h3>Recursive Self-Improvement in Action</h3>
+              <div class="blockquote">In software engineering, an object that does everything ends up doing nothing well. Why should it be different with agents?</div>
+              <p>The problem was deeper than just dividing responsibilities. Creating specialized subagents and isolating them wasn't enough. I needed an orchestrator: someone who knew the complete workflow, who understood how and when to call each specialist. A conductor who knew the score.</p>
+              <p>That's when an intense research process began: audit sessions and improvement of the system itself with Claude Code, Codex, and other LLMs. I relied on deep AI-guided searches to detect orchestration and workflow patterns, study context engineering and multi-agent systems, analyze GitHub repositories, and learn from real experiences on Reddit and technical articles. <em>Recursive self‑improvement</em> in action.</p>
+              <p>This research led me to a completely different architecture. If I wanted to go beyond delegating tasks, I needed to put the orchestrator at the center.</p>
+              <h3>The 5 specialists and their reason for being</h3>
+              <ul>
+                <li><strong>terraform-architect</strong>: Infrastructure as code (GCP/AWS resources).</li>
+                <li><strong>gitops-operator</strong>: Kubernetes/Flux deployments.</li>
+                <li><strong>gcp-troubleshooter</strong>: GCP diagnostics (read-only).</li>
+                <li><strong>aws-troubleshooter</strong>: AWS diagnostics (read-only).</li>
+                <li><strong>devops-developer</strong>: Build/test/CI‑CD at the application layer.</li>
+                <li><strong>claude-code (the orchestrator)</strong>: Reads <code>project-context.json</code>, generates <em>context contracts</em>, executes semantic routing, applies <em>security tiers</em>, manages <em>approval gates</em>, and keeps the source of truth updated.</li>
+              </ul>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+User Request
+    ↓
+┌────────────────────────────────────────────┐
+│          CLAUDE CODE (Orchestrator)        │
+└───────────────┬────────────────────────────┘
+                │
+       Reads  → project-context.json
+       Builds → context contract payload
+                │
+  ┌──────────┬──────────┬──────────┬──────────┬──────────┐
+  │terraform │ gitops   │  gcp     │  aws     │ devops   │
+  │architect │ operator │troublesh.│troublesh.│developer │
+  └────▲─────┴────▲─────┴────▲─────┴────▲─────┴────▲─────┘
+       │          │          │          │          │
+       └──────────┴──────────┴──────────┴──────────┘
+                │
+ Analyze → Plan → Ask User → Execute → Verify → Report
+                │
+                ↓
+┌─────────────────────────────────────────────┐
+│               Live Environment              │
+│ GKE | Cloud SQL/RDS | VPCs | K8s | Git repos│
+└─────────────────────────────────────────────┘
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chapter 2 -->
+        <section class="chapter" id="cap-2">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Chapter 2: Project Context – The Source of Truth</h2>
+              <div class="blockquote">The architecture was taking shape. But a fundamental piece remained: what do these agents work ON?</div>
+              <p>Having 5 agents and an orchestrator didn't solve everything. There was another architectural problem: the system had to be agnostic. I couldn't <em>hardcode</em> configurations from a single client in the agent prompts. I needed a reusable framework that worked with multiple projects, multiple clients, multiple technology stacks. Each agent had to be able to work in any context without rewriting its "mental code."</p>
+              <p>The solution was to externalize all project knowledge. That's how <strong>Project Context</strong> was born.</p>
+              <h3>Project Context: one file, all the truth</h3>
+              <p><code>project-context.json</code> is the single source of truth (SSOT) for each project. One file per client/project. It contains everything the system needs to know:</p>
+              <ul>
+                <li><strong>project_details:</strong> Name, client, description, technology stack.</li>
+                <li><strong>terraform_infrastructure:</strong> Modules, variables, <em>outputs</em>, resource state.</li>
+                <li><strong>gitops_configuration:</strong> Git repositories, Kustomize structure, <em>overlays</em>.</li>
+                <li><strong>cluster_details:</strong> GKE/EKS clusters, namespaces, resources, pods.</li>
+                <li><strong>application_services:</strong> APIs, frontends, ports, states, dependencies.</li>
+                <li><strong>operational_guidelines:</strong> Project rules (don't use X, always validate Y).</li>
+              </ul>
+              <p>This file is the brain of the system and grows with each deploy: when <code>gitops-operator</code> deploys a new service or <code>terraform-architect</code> creates a database, both update <code>project-context.json</code>. The file evolves with the project.</p>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+Project Context (SSOT)
+┌─────────────────────────────────────────────┐
+│           project-context.json              │
+│ project_details                             │
+│ terraform_infrastructure                    │
+│ gitops_configuration                        │
+│ cluster_details                             │
+│ application_services                        │
+│ operational_guidelines                      │
+└──────────────────────┬──────────────────────┘
+                      │
+                      ↓
+[Step 1] Orchestrator interprets the request
+[Step 2] Chooses appropriate agent
+[Step 3] Loads project-context.json
+[Step 4] Filters only what's relevant for that agent
+[Step 5] Sends reduced context to agent
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chapter 3 -->
+        <section class="chapter" id="cap-3">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Chapter 3: Controlled Intelligence</h2>
+              <h3>Precise context, intelligent routing, firm guardrails</h3>
+              <div class="blockquote">Agents do the work; the orchestrator decides the order, context, and limits.</div>
+              <p>In this chapter I describe the pieces that give the system this capability: the router that interprets user intent, the context provider that translates <code>project-context.json</code> into just what's needed for each agent, and the <em>approval gate</em> that puts humans in critical decisions, all within a six-phase workflow.</p>
+
+              <h3>1. Agent Routing: from natural language to precise decision</h3>
+              <p><strong>The problem:</strong> I didn't want to force users to use reserved words or precise technical language. If someone says "terraform," obvious: invoke <code>terraform-architect</code>. But what about "I need a database," "Check the cluster," "The service isn't responding"?</p>
+              <p><strong>First version:</strong> simple keywords. If it detected "terraform" → <code>terraform-architect</code>. If it detected "kubernetes" → <code>gitops-operator</code>. It worked... until it didn't.</p>
+              <p><strong>Version 2 – intent analysis:</strong> Not just exact words, but synonyms and related concepts. "Storage" maps to infrastructure. "Logs" suggests shared resources. Semantic analysis using embeddings to compare the query with each agent's descriptions.</p>
+
+              <h3>2. Context Provider: the heart of the system</h3>
+              <p><strong>The problem:</strong> each agent needs different context, but <code>project-context.json</code> is large (30K+ tokens). Sending the entire file to each agent was inefficient, costly, and confusing.</p>
+              <div class="blockquote">Too much context can be harmful to correct task execution, even if the agent starts from a "clean" context.</div>
+              <p><strong>Solution:</strong> <em>Context Contracts</em>, the agents' API. Each agent declares what fields it needs; the orchestrator reads the contract, extracts only those sections from the project‑context, and builds an optimized payload. The agent receives exactly what it needs. Nothing more.</p>
+
+              <h3>3. Approval Gate: humans always in the loop</h3>
+              <p><strong>Philosophy:</strong> "Trust but verify". Agents can plan, analyze, and propose, but only humans can approve critical operations.</p>
+              <div class="blockquote"><strong>What is a critical operation?</strong> Tier T3: operations that modify state in production and are not easily reversible.</div>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+User Query
+    ↓
+[Phase 1: Routing]
+    Agent Router → chooses agent
+    ↓
+[Phase 2: Context]
+    Context Provider → reduced payload
+    ↓
+[Phase 3: Planning]
+    Agent → Realization Package
+    ↓ HALT
+[Phase 4: Approval Gate]
+    Summary in human language
+    AskUserQuestion → Approve / Reject / Other
+    ├─ Approved? → continue
+    └─ Rejected? → HALT
+    ↓
+[Phase 5: Realization]
+    Execute + Verify
+    ↓
+[Phase 6: State Update]
+    update project-context.json
+    update tasks.md
+    report next steps
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Chapter 4 -->
+        <section class="chapter" id="cap-4">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Chapter 4: Layered Security</h2>
+              <h3>Settings and permissions: security tiers and hooks</h3>
+              <div class="blockquote">Automation rarely stops due to lack of capability; it almost always stops where our trust ends.</div>
+              <p>The problem wasn't automation itself. It was that I was creating unnecessary friction where I didn't need it. A predictable workflow requires two simultaneous pillars:</p>
+              <p><strong>Agility</strong>, where risk is null (queries, validations).</p>
+              <p><strong>Control</strong>, where risk is irreversible (deployments, deletions).</p>
+              <p>Without this discrimination, you end up with noise or danger. <strong>Solution?</strong></p>
+
+              <h3>1. Security Tiers (T0–T3)</h3>
+              <p>I classified all operations into four risk levels: <strong>T0</strong> reads, <strong>T1</strong> validations, <strong>T2</strong> local changes/dry‑run, and <strong>T3</strong> operations that write to real environments and require Approval Gate.</p>
+
+              <h3>2. Hooks: the system's guardians</h3>
+              <p><strong>pre_tool_use.py:</strong> Intercepts all commands before execution and decides if it's safe before executing it.</p>
+              <p><strong>post_tool_use.py:</strong> Logs what happened after executing the command.</p>
+              <p><strong>subagent_stop.py:</strong> Every time an agent closes a session, it generates a complete report.</p>
+
+              <h3>3. Settings: Allow, Ask, Deny</h3>
+              <p>With tiers and hooks in place, the orchestrator was finally armored: any command passed through a filter before touching a real environment. It was time for agents to stop just executing commands for me; it was time to delegate complete tasks to them. For that I had to go to the root: edit the <code>.claude/settings.json</code> file.</p>
+              <p>There I define how Claude Code reacts to each command that comes from the prompt: <strong>Deny</strong> marks what should never be executed, <strong>Ask</strong> stops the flow and asks me for explicit confirmation for sensitive operations, and <strong>Allow</strong> lets safe reads and actions pass without friction.</p>
+              <p>The result is simple: the system's speed is no longer limited by what agents can do, but by what I decide to allow. When my confidence changes, I don't rewrite the entire system; I adjust the settings.</p>
+            </div>
+            <div class="chapter-diagram pre-split">
+              <div class="diagram-block tiers">
+                <pre>
+Security Tiers
+┌────┬───────────────┬─────────────────────────────┐
+│Tier│ Type          │ Quick example               │
+├────┼───────────────┼─────────────────────────────┤
+│ T0 │ Read‑Only     │ get, show, status           │
+│ T1 │ Validation    │ validate, lint, --dry‑run   │
+│ T2 │ Dry‑Run/Local │ plan, local edits           │
+│ T3 │ Write Ops     │ apply, push, deploy         │
+└────┴───────────────┴─────────────────────────────┘
+                </pre>
+              </div>
+              <div class="diagram-block flow">
+                <pre>
+Execution flow
+User prompt
+    ↓
+Settings (Allow / Ask / Deny)
+    ↓
+pre_tool_use.py   (security)
+    ↓
+Bash / command
+    ↓
+post_tool_use.py  (audit log)
+    ↓
+subagent_stop.py  (session report)
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <!-- Synthesis -->
+        <section class="chapter" id="cap-6">
+          <h2>Chapter 5: Reflections, Synthesis, and the Path Forward</h2>
+          <h3>What Works, What Doesn't, and Why It Matters</h3>
+          <p>The tools are there. The guardrails are there. The system works. But building it taught me more about systems than about individual commands.</p>
+
+          <p>If I've learned anything in all this madness, it's that this new technology isn't about writing more software, but about <strong>designing behaviors</strong>: systems that make decisions with context, with guardrails, and with a human who understands why they trust them. Each iteration made me ask less "what code to write" and more "what decisions do I want the system to make, with what context and under what limits."</p>
+
+          <h3>Principles I take with me</h3>
+          <ul>
+            <li><strong>AI doesn't replace humans, it amplifies them.</strong> It allows me to explore more paths in less time, but that amplification only works if I maintain the same rigor I would have reviewing the work of a human team.</li>
+            <li><strong>Context is not an information dump.</strong> It's deciding what each agent needs to know, no more, no less. <code>project-context.json</code>, contracts, and the Context Provider exist so agents work with useful context, not noise.</li>
+            <li><strong>A clear workflow is worth more than "more intelligence."</strong> The six phases (routing, context, planning, approval, realization, update) matter more than having a larger model. Without clear phases, the system becomes unpredictable.</li>
+            <li><strong>Security is part of architecture, not a patch at the end.</strong> Tiers T0–T3, hooks, and Allow/Ask/Deny settings aren't "implementation details": they're the foundation for being able to trust a system that executes real commands in real environments.</li>
+            <li><strong>There's no final version, only versions good enough to learn something new.</strong> The system changes with each use. What matters isn't "closing it," but having the ability to observe it, measure it, and redesign it without fear.</li>
+          </ul>
+
+          <h3>What's next?</h3>
+          <p>The system is already packaged as NPM and ready for <code>npx</code>, but not yet published. What comes now is summarized in three fronts:</p>
+          <ul>
+            <li><strong>Deepen Clarify (Phase 0):</strong> improve ambiguity detection and automatic questions that guide the user.</li>
+            <li><strong>Rethink planning (Spec‑Kit and beyond):</strong> review how tasks and plans are born to better align them with the six-phase workflow and real agent usage.</li>
+            <li><strong>Make task management visible:</strong> explore whether the best option is to integrate JIRA/Linear or opt for a custom system that speaks the same language as the agents.</li>
+          </ul>
+
         </section>
       </article>
       <div class="footer">
-        <p>Monocromático, responsivo y con el contexto primero. © Jorge Aguilar</p>
+        <p lang="es" data-lang-section="es">El verdadero límite de la automatización no está en las máquinas, sino en lo que estamos dispuestos a dejar que hagan por nosotros. © Jorge Aguilar</p>
+        <p lang="en" data-lang-section="en" hidden>The true limit of automation isn't in the machines, but in what we're willing to let them do for us. © Jorge Aguilar</p>
       </div>
     </div>
   </div>
@@ -581,9 +881,18 @@ subagent_stop.py  (reporte de sesión)
   <script>
     (function () {
       const themeBtn = document.getElementById('theme-btn');
+      const langBtn = document.getElementById('lang-btn');
+      const langText = langBtn.querySelector('.lang-text');
+      const pageTitle = document.getElementById('page-title');
+      const languageSections = document.querySelectorAll('[data-lang-section]');
+      const languageStorageKey = 'agentic-workflows-active-lang';
 
       themeBtn.addEventListener('click', toggleTheme);
+      langBtn.addEventListener('click', toggleLanguage);
+
       loadTheme();
+      initializeLanguage();
+      bindSystemThemeListener();
 
       function toggleTheme() {
         const body = document.body;
@@ -622,6 +931,60 @@ subagent_stop.py  (reporte de sesión)
         } else {
           themeIcon.textContent = '☀️';
           themeText.textContent = 'Modo Noche';
+        }
+      }
+
+      function bindSystemThemeListener() {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = () => {
+          if (!localStorage.getItem('theme')) {
+            loadTheme();
+          }
+        };
+
+        if (typeof mediaQuery.addEventListener === 'function') {
+          mediaQuery.addEventListener('change', handler);
+        } else if (typeof mediaQuery.addListener === 'function') {
+          mediaQuery.addListener(handler);
+        }
+      }
+
+      function toggleLanguage() {
+        const current = document.body.getAttribute('data-lang') || 'es';
+        const next = current === 'en' ? 'es' : 'en';
+        applyLanguage(next);
+      }
+
+      function initializeLanguage() {
+        const savedLang = localStorage.getItem(languageStorageKey);
+        const initialLang = savedLang === 'en' ? 'en' : 'es';
+        applyLanguage(initialLang);
+      }
+
+      function applyLanguage(lang) {
+        document.body.setAttribute('data-lang', lang);
+        document.documentElement.lang = lang;
+
+        languageSections.forEach((section) => {
+          const sectionLang = section.getAttribute('data-lang-section');
+          section.hidden = sectionLang !== lang;
+        });
+
+        updateLangButtonLabel(lang);
+        localStorage.setItem(languageStorageKey, lang);
+        if (pageTitle) {
+          const titleText = lang === 'es' ? pageTitle.dataset.textEs : pageTitle.dataset.textEn;
+          pageTitle.textContent = titleText;
+        }
+      }
+
+      function updateLangButtonLabel(activeLang) {
+        if (activeLang === 'es') {
+          langText.textContent = 'EN';
+          langBtn.setAttribute('aria-label', 'Cambiar a inglés');
+        } else {
+          langText.textContent = 'ES';
+          langBtn.setAttribute('aria-label', 'Switch to Spanish');
         }
       }
     })();
