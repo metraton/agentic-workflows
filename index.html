@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Más allá de la delegación: Orquestando Sistemas Agénticos Controlados</title>
+  <style>
+    :root {
+      /* Day Mode - Sepia/Warm theme */
+      --day-background: #faf8f2;
+      --day-surface: #f5f3ed;
+      --day-card: #fefcf6;
+      --day-text-primary: #3c2f1f;
+      --day-text-secondary: #5a4835;
+      --day-text-muted: #8b7355;
+      --day-border: #d9d1c1;
+      --day-header-bg: #3c2f1f;
+      --day-header-text: #f5f3ed;
+
+      /* Night Mode - Soft dark theme */
+      --night-background: #1a1a1a;
+      --night-surface: #2d2d2d;
+      --night-card: #252525;
+      --night-text-primary: #e8e6e0;
+      --night-text-secondary: #d0cdc4;
+      --night-text-muted: #a39d8b;
+      --night-border: #404040;
+      --night-header-bg: #1a1a1a;
+      --night-header-text: #e8e6e0;
+
+      --base-font-size: clamp(19px, 1.8vw, 21px);
+      --font-scale-sm: calc(var(--base-font-size) * 1.1);
+      --font-scale-md: calc(var(--base-font-size) * 1.25);
+      --font-scale-lg: calc(var(--base-font-size) * 1.45);
+      --font-scale-xl: calc(var(--base-font-size) * 1.75);
+      --diagram-font-size: clamp(1rem, 0.9vw, 1.35rem);
+      --diagram-width: clamp(280px, 60vw, 740px);
+    }
+
+    [data-theme="day"], :root {
+      --background: var(--day-background);
+      --surface: var(--day-surface);
+      --card: var(--day-card);
+      --text-primary: var(--day-text-primary);
+      --text-secondary: var(--day-text-secondary);
+      --text-muted: var(--day-text-muted);
+      --border: var(--day-border);
+      --header-bg: var(--day-header-bg);
+      --header-text: var(--day-header-text);
+    }
+
+    [data-theme="night"] {
+      --background: var(--night-background);
+      --surface: var(--night-surface);
+      --card: var(--night-card);
+      --text-primary: var(--night-text-primary);
+      --text-secondary: var(--night-text-secondary);
+      --text-muted: var(--night-text-muted);
+      --border: var(--night-border);
+      --header-bg: var(--night-header-bg);
+      --header-text: var(--night-header-text);
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      background-color: var(--background);
+      color: var(--text-secondary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: var(--base-font-size);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .theme-toggle:hover {
+      background: var(--surface);
+    }
+
+    .container {
+      margin: clamp(1rem, 4vw, 3rem) 5%;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 20px rgba(0,0,0,0.06);
+    }
+
+    header {
+      text-align: center;
+      padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 3vw, 1.5rem) 0;
+    }
+
+    header h3 {
+      display: block;
+      width: 100%;
+      margin: 0 0 1rem;
+      font-size: var(--base-font-size);
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background-color: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: left;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-weight: 400;
+    }
+
+    article {
+      padding: 1rem clamp(1rem, 3vw, 1.75rem) clamp(1.5rem, 4vw, 2.25rem);
+    }
+
+    h1, h2, h3 {
+      color: var(--text-primary);
+      line-height: 1.3;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: var(--font-scale-xl);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: var(--font-scale-lg);
+      margin: 1.75rem 0 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: var(--font-scale-md);
+    }
+
+    .subtitle {
+      font-size: var(--font-scale-sm);
+      color: var(--text-muted);
+      margin: 0 0 1.25rem;
+      font-weight: 400;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: clamp(1.25rem, 4vw, 2rem) 0;
+    }
+
+    p {
+      margin: 0.8rem 0;
+      color: var(--text-secondary);
+      font-size: var(--base-font-size);
+      line-height: 1.7;
+    }
+
+    ul, ol {
+      margin: 0.6rem 0 1rem 1.4rem;
+      padding: 0;
+    }
+
+    li {
+      margin: 0.4rem 0;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: var(--base-font-size);
+    }
+
+    .blockquote {
+      background: var(--surface);
+      border-left: 4px solid var(--text-primary);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    code {
+      background: var(--surface);
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+      color: var(--text-primary);
+    }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.9rem 0.85rem;
+      overflow-x: auto;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      color: var(--text-secondary);
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+      margin: 0.8rem 0;
+      white-space: pre;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1rem 1rem 1.25rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    a {
+      color: var(--text-primary);
+      text-decoration: underline;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.22em;
+    }
+
+    /* Chapter layout */
+    .chapter {
+      margin-top: 1.5rem;
+    }
+
+    .chapter-layout {
+      display: flex;
+      gap: clamp(1rem, 2vw, 2rem);
+      align-items: stretch;
+      margin-top: 0.75rem;
+    }
+
+    .chapter-text {
+      flex: 3;
+      min-width: 0;
+    }
+
+    .chapter-diagram {
+      flex: 2.8;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chapter-diagram.pre-split {
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 0.5rem;
+    }
+
+    .diagram-block {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .diagram-block.tiers {
+      margin-top: 17.2rem;
+    }
+
+    .diagram-block.flow {
+      margin-top: 8.4rem;
+    }
+
+    .chapter-diagram pre,
+    .diagram-centered pre {
+      margin: 0;
+      font-size: var(--diagram-font-size);
+      line-height: 1.35;
+      width: min(100%, var(--diagram-width));
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 960px) {
+      .chapter-layout {
+        flex-direction: column;
+      }
+
+      .chapter-diagram {
+        order: 2;
+      }
+    }
+  </style>
+</head>
+<body data-theme="day">
+  <button class="theme-toggle" id="theme-btn">
+    <span class="theme-icon">☀️</span>
+    <span class="theme-text">Modo Noche</span>
+  </button>
+
+  <div class="container">
+    <div class="card">
+      <header>
+        <h3>jaguilar@ai-context-ops ~/gaia-ops % : cat /agents/workflow.md</h3>
+      </header>
+      <article>
+        <h1>Más allá de la delegación: Orquestando Sistemas Agénticos Controlados</h1>
+        <p class="subtitle">Cómo pasé de delegar la ejecución de comandos con IA a diseñar un sistema agéntico completo con orquestación, contexto y seguridad en capas.</p>
+
+        <p><strong>Autor:</strong> Jorge Aguilar · <strong>Fecha:</strong> Noviembre 2025 · <strong>Conexión:</strong> Continuación de "Context Design &amp; Agentic Deployment"</p>
+
+        <hr />
+
+        <p>En mi artículo anterior, compartí cómo Spec-Kit—un framework de planificación estructurada—junto con 5 agentes especializados, lograron desplegar cuatro aplicaciones desde cero de manera agéntica. Aplicaciones contenedorizadas, infraestructura en IaC verificada y despliegues GitOps. El sistema entregó.</p>
+
+        <p>Pero yo estuve ahí todo el tiempo: monitoreando cada paso, interviniendo cuando el agente se desviaba, confirmando cada operación. Usaba IA, sí, pero seguía siendo el operador manual. Más que un sistema autónomo, era como construir un robot que necesita que lo lleves de la mano.</p>
+
+        <p>Ahí apareció la disyuntiva. Por un lado, generaba valor real: aplicaciones desplegadas, entregas cumplidas. Por el otro, cada sesión me revelaba algo nuevo sobre arquitectura de agentes, <em>context engineering</em> y orquestación inteligente. ¿Estaba realmente automatizando o solo delegando comandos? Entre investigaciones profundas, auditorías y ese loop recursivo para mejorar continuamente el sistema, era difícil medirlo. Intuía, sin embargo, que el siguiente paso no era “más agentes”, sino <strong>más orquestación y más control</strong>. De eso trata este artículo.</p>
+
+        <hr />
+
+        <!-- Capítulo 1 -->
+        <section class="chapter" id="cap-1">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Capítulo 1: Arquitectura</h2>
+              <h3>Recursive Self-Improvement en Acción</h3>
+              <div class="blockquote">En ingeniería de software, un objeto que hace todo termina no haciendo nada bien. ¿Por qué debería ser diferente con agentes?</div>
+              <p>El problema era más profundo que solo dividir responsabilidades. No bastaba con crear subagentes especializados y aislarlos. Necesitaba un orquestador: alguien que supiera el workflow completo, que entendiera cómo y cuándo llamar a cada especialista. Un director de orquesta que conociera la partitura.</p>
+              <p>Ahí empezó un proceso intenso de investigación: sesiones de auditoría y mejora del propio sistema con Claude Code, Codex y otros LLMs. Me apoyé en búsquedas profundas guiadas por IA para detectar patrones de orquestación y workflow, estudiar ingeniería de contexto y sistemas multi‑agente, analizar repositorios de GitHub y aprender de experiencias reales en Reddit y artículos técnicos. <em>Recursive self‑improvement</em> en acción.</p>
+              <p>Esta investigación me llevó a una arquitectura completamente diferente. Si quería ir más allá de delegar tareas, necesitaba poner al orquestador en el centro.</p>
+              <h3>Los 5 especialistas y su razón de existir</h3>
+              <ul>
+                <li><strong>terraform-architect</strong>: Infraestructura como código (recursos GCP/AWS).</li>
+                <li><strong>gitops-operator</strong>: Deployments Kubernetes/Flux.</li>
+                <li><strong>gcp-troubleshooter</strong>: Diagnósticos GCP (solo lectura).</li>
+                <li><strong>aws-troubleshooter</strong>: Diagnósticos AWS (solo lectura).</li>
+                <li><strong>devops-developer</strong>: Build/test/CI‑CD en la capa de aplicación.</li>
+                <li><strong>claude-code (el orquestador)</strong>: Lee <code>project-context.json</code>, genera <em>context contracts</em>, ejecuta el routing semántico, aplica <em>security tiers</em>, gestiona <em>approval gates</em> y mantiene la fuente de verdad actualizada.</li>
+              </ul>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+User Request
+    ↓
+┌────────────────────────────────────────────┐
+│          CLAUDE CODE (Orquestador)         │
+└───────────────┬────────────────────────────┘
+                │
+       Reads  → project-context.json
+       Builds → context contract payload
+                │
+  ┌──────────┬──────────┬──────────┬──────────┬──────────┐
+  │terraform │ gitops   │  gcp     │  aws     │ devops   │
+  │architect │ operator │troublesh.│troublesh.│developer │
+  └────▲─────┴────▲─────┴────▲─────┴────▲─────┴────▲─────┘
+       │          │          │          │          │
+       └──────────┴──────────┴──────────┴──────────┘
+                │
+ Analyze → Plan → Ask User → Execute → Verify → Report
+                │
+                ↓
+┌─────────────────────────────────────────────┐
+│               Live Environment              │
+│ GKE | Cloud SQL/RDS | VPCs | K8s | Git repos│
+└─────────────────────────────────────────────┘
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Capítulo 2 -->
+        <section class="chapter" id="cap-2">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Capítulo 2: Project Context – La Fuente de Verdad</h2>
+              <div class="blockquote">La arquitectura estaba tomando forma. Pero quedaba una pieza fundamental: ¿sobre QUÉ trabajan estos agentes?</div>
+              <p>Tener 5 agentes y un orquestador no resolvía todo. Había otro problema arquitectónico: el sistema debía ser agnóstico. No podía <em>hardcodear</em> configuraciones de un solo cliente en los prompts de los agentes. Necesitaba un framework reutilizable que funcionara con múltiples proyectos, múltiples clientes, múltiples stacks tecnológicos. Cada agente debía poder trabajar en cualquier contexto sin reescribir su “código mental”.</p>
+              <p>La solución fue externalizar todo el conocimiento del proyecto. Ahí nació <strong>Project Context</strong>.</p>
+              <h3>Project Context: un archivo, toda la verdad</h3>
+              <p><code>project-context.json</code> es la fuente de verdad (SSOT) de cada proyecto. Un archivo por cliente/proyecto. Contiene todo lo que el sistema necesita saber:</p>
+              <ul>
+                <li><strong>project_details:</strong> Nombre, cliente, descripción, stack tecnológico.</li>
+                <li><strong>terraform_infrastructure:</strong> Módulos, variables, <em>outputs</em>, estado de recursos.</li>
+                <li><strong>gitops_configuration:</strong> Repositorios Git, estructura Kustomize, <em>overlays</em>.</li>
+                <li><strong>cluster_details:</strong> Clusters GKE/EKS, namespaces, recursos, pods.</li>
+                <li><strong>application_services:</strong> APIs, frontends, puertos, estados, dependencias.</li>
+                <li><strong>operational_guidelines:</strong> Reglas del proyecto (no usar X, siempre validar Y).</li>
+              </ul>
+              <p>Este archivo es el cerebro del sistema y crece con cada deploy: cuando <code>gitops-operator</code> despliega un nuevo servicio o <code>terraform-architect</code> crea una base de datos, ambos actualizan <code>project-context.json</code>. El archivo evoluciona con el proyecto.</p>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+Project Context (SSOT)
+┌─────────────────────────────────────────────┐
+│           project-context.json              │
+│ project_details                             │
+│ terraform_infrastructure                    │
+│ gitops_configuration                        │
+│ cluster_details                             │
+│ application_services                        │
+│ operational_guidelines                      │
+└──────────────────────┬──────────────────────┘
+                      │
+                      ↓
+[Paso 1] Orquestador interpreta la petición
+[Paso 2] Elige agente adecuado
+[Paso 3] Carga project-context.json
+[Paso 4] Filtra solo lo relevante para ese agente
+[Paso 5] Envía contexto reducido al agente
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Capítulo 3 -->
+        <section class="chapter" id="cap-3">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Capítulo 3: Inteligencia Controlada</h2>
+              <h3>Contexto preciso, routing inteligente, guardrails firmes</h3>
+              <div class="blockquote">Los agentes hacen el trabajo; el orquestador decide el orden, el contexto y los límites.</div>
+              <p>En este capítulo describo las piezas que le dan esa capacidad al sistema: el router que interpreta la intención del usuario, el proveedor de contexto que traduce <code>project-context.json</code> en lo justo y necesario para cada agente, y el <em>approval gate</em> que pone al humano en las decisiones críticas, todo dentro de un workflow de seis fases.</p>
+
+              <h3>1. Agent Routing: de lenguaje natural a decisión precisa</h3>
+              <p><strong>El problema:</strong> No quería forzar al usuario a usar palabras reservadas o lenguaje técnico preciso. Si alguien dice “terraform”, obvio: invocar <code>terraform-architect</code>. Pero ¿qué pasa con “Necesito una base de datos”, “Revisa el cluster”, “El servicio no responde”?</p>
+              <p><strong>Primera versión:</strong> keywords simples. Si detectaba “terraform” → <code>terraform-architect</code>. Si detectaba “kubernetes” → <code>gitops-operator</code>. Funcionó… hasta que no.</p>
+              <p><strong>Versión 2 – análisis de intención:</strong> No solo palabras exactas, sino sinónimos y conceptos relacionados. “Storage” se mapea a infraestructura. “Logs” sugiere recursos compartidos. Análisis semántico usando embeddings para comparar la query con descripciones de cada agente.</p>
+
+              <h3>2. Context Provider: el corazón del sistema</h3>
+              <p><strong>El problema:</strong> cada agente necesita contexto diferente, pero <code>project-context.json</code> es grande (30K+ tokens). Enviar todo el archivo a cada agente era ineficiente, costoso y confuso.</p>
+              <div class="blockquote">Mucho contexto puede ser perjudicial para la correcta ejecución de tareas, incluso aunque el agente parta de un contexto “limpio”.</div>
+              <p><strong>Solución:</strong> <em>Context Contracts</em>, el API de los agentes. Cada agente declara qué campos necesita; el orquestador lee el contrato, extrae solo esas secciones del project‑context y construye un payload optimizado. El agente recibe exactamente lo que necesita. Nada más.</p>
+
+              <h3>3. Approval Gate: el humano siempre en el loop</h3>
+              <p><strong>Filosofía:</strong> “Trust but verify”. Los agentes pueden planear, analizar y proponer, pero solo humanos pueden aprobar operaciones críticas.</p>
+              <div class="blockquote"><strong>¿Qué es una operación crítica?</strong> Tier T3: operaciones que modifican estado en producción y no son fácilmente reversibles.</div>
+            </div>
+            <div class="chapter-diagram">
+              <pre>
+User Query
+    ↓
+[Fase 1: Routing]
+    Agent Router → elige agente
+    ↓
+[Fase 2: Contexto]
+    Context Provider → payload reducido
+    ↓
+[Fase 3: Planning]
+    Agente → Realization Package
+    ↓ HALT
+[Fase 4: Approval Gate]
+    Resumen en lenguaje humano
+    AskUserQuestion → Aprobar / Rechazar / Otro
+    ├─ Approved? → continuar
+    └─ Rejected? → HALT
+    ↓
+[Fase 5: Realización]
+    Execute + Verify
+    ↓
+[Fase 6: State Update]
+    update project-context.json
+    update tasks.md
+    report next steps
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Capítulo 4 -->
+        <section class="chapter" id="cap-4">
+          <div class="chapter-layout">
+            <div class="chapter-text">
+              <h2>Capítulo 4: Seguridad en Capas</h2>
+              <h3>Settings y permissions: security tiers y hooks</h3>
+              <div class="blockquote">La automatización rara vez se detiene por falta de capacidad; casi siempre se detiene donde se acaba nuestra confianza.</div>
+              <p>El problema no era la automatización en sí. Era que estaba creando fricción innecesaria donde no la necesitaba. Un workflow predecible requiere dos pilares simultáneos: <strong>Agilidad</strong>, donde el riesgo es nulo (queries, validaciones), y <strong>Control</strong>, donde el riesgo es irreversible (deployments, deletions).</p>
+              <p>Sin esta discriminación, terminas con ruido o peligro. <strong>¿Solución?</strong></p>
+
+              <h3>1. Security Tiers (T0–T3)</h3>
+              <p>Clasifiqué todas las operaciones en cuatro niveles de riesgo: <strong>T0</strong> lecturas, <strong>T1</strong> validaciones, <strong>T2</strong> cambios locales/dry‑run y <strong>T3</strong> operaciones que escriben en entornos reales y requieren Approval Gate.</p>
+
+              <h3>2. Hooks: los guardianes del sistema</h3>
+              <p><strong>pre_tool_use.py</strong> decide si un comando es seguro antes de ejecutarlo, <strong>post_tool_use.py</strong> registra qué pasó después y <strong>subagent_stop.py</strong> cierra cada sesión con un reporte completo.</p>
+
+              <h3>3. Settings: Allow, Ask, Deny</h3>
+              <p>Con los tiers y los hooks en su lugar, el orquestador por fin estaba blindado: cualquier comando pasaba por un filtro antes de tocar un entorno real. Era momento de que los agentes dejaran de solo ejecutar comandos por mí; era momento de delegarles tareas completas. Para eso tuve que ir a la raíz: editar el archivo <code>.claude/settings.json</code>.</p>
+              <p>Allí defino cómo reacciona Claude Code ante cada comando que nace del prompt: <strong>Deny</strong> marca lo que nunca debe ejecutarse, <strong>Ask</strong> detiene el flujo y me pide una confirmación explícita para operaciones sensibles y <strong>Allow</strong> deja pasar lecturas y acciones seguras sin fricción.</p>
+              <p>El resultado es simple: la velocidad del sistema ya no está limitada por lo que los agentes pueden hacer, sino por lo que yo decido permitir. Cuando mi confianza cambia, no reescribo todo el sistema; ajusto los settings.</p>
+            </div>
+            <div class="chapter-diagram pre-split">
+              <div class="diagram-block tiers">
+                <pre>
+Security Tiers
+┌────┬───────────────┬─────────────────────────────┐
+│Tier│ Tipo          │ Ejemplo rápido              │
+├────┼───────────────┼─────────────────────────────┤
+│ T0 │ Read‑Only     │ get, show, status           │
+│ T1 │ Validation    │ validate, lint, --dry‑run   │
+│ T2 │ Dry‑Run/Local │ plan, edits locales         │
+│ T3 │ Write Ops     │ apply, push, deploy         │
+└────┴───────────────┴─────────────────────────────┘
+                </pre>
+              </div>
+              <div class="diagram-block flow">
+                <pre>
+Flujo de ejecución
+User prompt
+    ↓
+Settings (Allow / Ask / Deny)
+    ↓
+pre_tool_use.py   (seguridad)
+    ↓
+Bash / comando
+    ↓
+post_tool_use.py  (audit log)
+    ↓
+subagent_stop.py  (reporte de sesión)
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <hr />
+
+        <!-- Síntesis -->
+        <section class="chapter" id="cap-6">
+          <h2>Capítulo 5–6: Reflexiones, Síntesis y el Camino Adelante</h2>
+          <p>Las herramientas están. Los guardrails están. El sistema funciona. Pero construirlo me enseñó más sobre sistemas que sobre comandos individuales.</p>
+
+          <p>Si algo he aprendido en toda esta locura es que esta nueva tecnología no va de escribir más software, sino de <strong>diseñar comportamientos</strong>: sistemas que tomen decisiones con contexto, con guardrails y con un humano que entiende por qué confía en ellos. Cada iteración me hizo preguntarme menos “qué código escribir” y más “qué decisiones quiero que tome el sistema, con qué contexto y bajo qué límites”.</p>
+
+          <h3>Principios que me llevo</h3>
+          <ul>
+            <li><strong>La IA no reemplaza al humano, lo amplifica.</strong> Me permite explorar más caminos en menos tiempo, pero esa amplificación solo funciona si mantengo el mismo rigor que tendría revisando el trabajo de un equipo humano.</li>
+            <li><strong>Contexto no es un dump de información.</strong> Es decidir qué necesita saber cada agente, ni más ni menos. <code>project-context.json</code>, los contracts y el Context Provider existen para que los agentes trabajen con contexto útil, no con ruido.</li>
+            <li><strong>Un workflow claro vale más que “más inteligencia”.</strong> Las seis fases (routing, contexto, planning, approval, realización, actualización) importan más que tener un modelo más grande. Sin fases claras, el sistema se vuelve impredecible.</li>
+            <li><strong>La seguridad es parte de la arquitectura, no un parche al final.</strong> Los tiers T0–T3, los hooks y los settings Allow/Ask/Deny no son “detalle de implementación”: son la base para poder confiar en un sistema que ejecuta comandos reales en entornos reales.</li>
+            <li><strong>No hay versión final, solo versiones suficientemente buenas para aprender algo nuevo.</strong> El sistema cambia con cada uso. Lo importante no es “cerrarlo”, sino tener la capacidad de observarlo, medirlo y rediseñarlo sin miedo.</li>
+          </ul>
+
+          <h3>¿Qué sigue?</h3>
+          <p>El sistema ya está empaquetado como NPM y listo para <code>npx</code>, pero todavía no publicado. Lo que viene ahora se resume en tres frentes:</p>
+          <ul>
+            <li><strong>Profundizar en Clarify (Phase 0):</strong> mejorar la detección de ambigüedad y las preguntas automáticas que guían al usuario.</li>
+            <li><strong>Replantear la planificación (Spec‑Kit y más allá):</strong> revisar cómo nacen las tareas y los planes para ajustarlos mejor al workflow de seis fases y al uso real de agentes.</li>
+            <li><strong>Hacer visible la gestión de tareas:</strong> explorar si la mejor opción es integrar JIRA/Linear u optar por un sistema propio que hable el mismo idioma que los agentes.</li>
+          </ul>
+
+          <p>Lo técnico seguirá cambiando: modelos, APIs, herramientas. Lo que quiero que se mantenga es la idea central de este artículo: más allá de delegar comandos, nuestro trabajo es diseñar sistemas agénticos que tomen decisiones con contexto, con guardrails y con un humano que entiende por qué confía en ellos.</p>
+        </section>
+      </article>
+      <div class="footer">
+        <p>Monocromático, responsivo y con el contexto primero. © Jorge Aguilar</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const themeBtn = document.getElementById('theme-btn');
+
+      themeBtn.addEventListener('click', toggleTheme);
+      loadTheme();
+
+      function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.querySelector('.theme-icon');
+        const themeText = document.querySelector('.theme-text');
+
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'day' ? 'night' : 'day';
+
+        body.setAttribute('data-theme', newTheme);
+
+        if (newTheme === 'night') {
+          themeIcon.textContent = '🌙';
+          themeText.textContent = 'Modo Día';
+        } else {
+          themeIcon.textContent = '☀️';
+          themeText.textContent = 'Modo Noche';
+        }
+
+        localStorage.setItem('theme', newTheme);
+      }
+
+      function loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+        const theme = savedTheme || systemTheme;
+
+        document.body.setAttribute('data-theme', theme);
+
+        const themeIcon = document.querySelector('.theme-icon');
+        const themeText = document.querySelector('.theme-text');
+
+        if (theme === 'night') {
+          themeIcon.textContent = '🌙';
+          themeText.textContent = 'Modo Día';
+        } else {
+          themeIcon.textContent = '☀️';
+          themeText.textContent = 'Modo Noche';
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
+
+
